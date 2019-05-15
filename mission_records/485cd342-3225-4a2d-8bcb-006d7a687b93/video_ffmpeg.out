@@ -1,0 +1,47 @@
+ffmpeg version 2.8.15-0ubuntu0.16.04.1 Copyright (c) 2000-2018 the FFmpeg developers
+  built with gcc 5.4.0 (Ubuntu 5.4.0-6ubuntu1~16.04.10) 20160609
+  configuration: --prefix=/usr --extra-version=0ubuntu0.16.04.1 --build-suffix=-ffmpeg --toolchain=hardened --libdir=/usr/lib/x86_64-linux-gnu --incdir=/usr/include/x86_64-linux-gnu --cc=cc --cxx=g++ --enable-gpl --enable-shared --disable-stripping --disable-decoder=libopenjpeg --disable-decoder=libschroedinger --enable-avresample --enable-avisynth --enable-gnutls --enable-ladspa --enable-libass --enable-libbluray --enable-libbs2b --enable-libcaca --enable-libcdio --enable-libflite --enable-libfontconfig --enable-libfreetype --enable-libfribidi --enable-libgme --enable-libgsm --enable-libmodplug --enable-libmp3lame --enable-libopenjpeg --enable-libopus --enable-libpulse --enable-librtmp --enable-libschroedinger --enable-libshine --enable-libsnappy --enable-libsoxr --enable-libspeex --enable-libssh --enable-libtheora --enable-libtwolame --enable-libvorbis --enable-libvpx --enable-libwavpack --enable-libwebp --enable-libx265 --enable-libxvid --enable-libzvbi --enable-openal --enable-opengl --enable-x11grab --enable-libdc1394 --enable-libiec61883 --enable-libzmq --enable-frei0r --enable-libx264 --enable-libopencv
+  libavutil      54. 31.100 / 54. 31.100
+  libavcodec     56. 60.100 / 56. 60.100
+  libavformat    56. 40.101 / 56. 40.101
+  libavdevice    56.  4.100 / 56.  4.100
+  libavfilter     5. 40.101 /  5. 40.101
+  libavresample   2.  1.  0 /  2.  1.  0
+  libswscale      3.  1.101 /  3.  1.101
+  libswresample   1.  2.101 /  1.  2.101
+  libpostproc    53.  3.100 / 53.  3.100
+Input #0, image2pipe, from 'pipe:':
+  Duration: N/A, bitrate: N/A
+    Stream #0:0: Video: ppm, rgb24, 512x512, 12 fps, 12 tbr, 12 tbn, 12 tbc
+[libx264 @ 0x20e0c00] using cpu capabilities: MMX2 SSE2Fast SSSE3 SSE4.2 AVX
+[libx264 @ 0x20e0c00] profile High, level 2.2
+[libx264 @ 0x20e0c00] 264 - core 148 r2643 5c65704 - H.264/MPEG-4 AVC codec - Copyleft 2003-2015 - http://www.videolan.org/x264.html - options: cabac=1 ref=3 deblock=1:0:0 analyse=0x3:0x113 me=hex subme=7 psy=1 psy_rd=1.00:0.00 mixed_ref=1 me_range=16 chroma_me=1 trellis=1 8x8dct=1 cqm=0 deadzone=21,11 fast_pskip=1 chroma_qp_offset=-2 threads=12 lookahead_threads=2 sliced_threads=0 nr=0 decimate=1 interlaced=0 bluray_compat=0 constrained_intra=0 bframes=3 b_pyramid=2 b_adapt=1 b_bias=0 direct=1 weightb=1 open_gop=0 weightp=2 keyint=250 keyint_min=12 scenecut=40 intra_refresh=0 rc_lookahead=40 rc=abr mbtree=1 bitrate=400 ratetol=1.0 qcomp=0.60 qpmin=0 qpmax=69 qpstep=4 ip_ratio=1.40 aq=1:1.00
+Output #0, mp4, to './mission_records/485cd342-3225-4a2d-8bcb-006d7a687b93/video.mp4':
+  Metadata:
+    encoder         : Lavf56.40.101
+    Stream #0:0: Video: h264 (libx264) ([33][0][0][0] / 0x0021), yuv420p, 512x512, q=-1--1, 400 kb/s, 12 fps, 12288 tbn, 12 tbc
+    Metadata:
+      encoder         : Lavc56.60.100 libx264
+Stream mapping:
+  Stream #0:0 -> #0:0 (ppm (native) -> h264 (libx264))
+frame=   14 fps=0.0 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   20 fps= 19 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   26 fps= 16 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   32 fps= 15 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   38 fps= 14 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   44 fps= 13 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   50 fps= 13 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   56 fps= 13 q=0.0 size=       0kB time=00:00:00.00 bitrate=N/A    frame=   62 fps= 12 q=41.0 size=      82kB time=00:00:00.33 bitrate=2025.2kbits/s    frame=   68 fps= 12 q=43.0 size=     174kB time=00:00:00.83 bitrate=1710.1kbits/s    frame=   74 fps= 12 q=43.0 size=     206kB time=00:00:01.33 bitrate=1266.5kbits/s    frame=   80 fps= 12 q=43.0 size=     233kB time=00:00:01.83 bitrate=1039.6kbits/s    frame=   86 fps= 12 q=41.0 size=     240kB time=00:00:02.33 bitrate= 840.9kbits/s    frame=   92 fps= 12 q=40.0 size=     248kB time=00:00:02.83 bitrate= 716.0kbits/s    frame=   98 fps= 12 q=39.0 size=     258kB time=00:00:03.33 bitrate= 634.0kbits/s    frame=  104 fps= 12 q=39.0 size=     275kB time=00:00:03.83 bitrate= 586.8kbits/s    frame=  110 fps= 12 q=38.0 size=     291kB time=00:00:04.33 bitrate= 550.9kbits/s    frame=  116 fps= 12 q=37.0 size=     301kB time=00:00:04.83 bitrate= 509.6kbits/s    frame=  122 fps= 12 q=36.0 size=     311kB time=00:00:05.33 bitrate= 478.3kbits/s    frame=  128 fps= 11 q=37.0 size=     339kB time=00:00:05.83 bitrate= 476.8kbits/s    frame=  134 fps= 11 q=37.0 size=     362kB time=00:00:06.33 bitrate= 467.6kbits/s    frame=  138 fps= 11 q=-1.0 Lsize=     529kB time=00:00:11.33 bitrate= 382.1kbits/s    
+video:527kB audio:0kB subtitle:0kB other streams:0kB global headers:0kB muxing overhead: 0.290848%
+[libx264 @ 0x20e0c00] frame I:15    Avg QP:27.54  size: 12082
+[libx264 @ 0x20e0c00] frame P:115   Avg QP:32.18  size:  2923
+[libx264 @ 0x20e0c00] frame B:8     Avg QP:32.28  size:  2710
+[libx264 @ 0x20e0c00] consecutive B-frames: 89.9%  7.2%  0.0%  2.9%
+[libx264 @ 0x20e0c00] mb I  I16..4:  9.3% 52.1% 38.6%
+[libx264 @ 0x20e0c00] mb P  I16..4: 15.3% 54.3%  4.4%  P16..4: 11.2%  2.8%  1.6%  0.0%  0.0%    skip:10.5%
+[libx264 @ 0x20e0c00] mb B  I16..4:  0.2%  2.2%  5.4%  B16..8:  6.2%  2.1%  2.7%  direct: 0.3%  skip:80.9%  L0:61.3% L1:37.0% BI: 1.7%
+[libx264 @ 0x20e0c00] final ratefactor: 31.02
+[libx264 @ 0x20e0c00] 8x8 transform intra:69.9% inter:69.0%
+[libx264 @ 0x20e0c00] coded y,uvDC,uvAC intra: 21.7% 34.4% 11.6% inter: 12.3% 9.7% 0.7%
+[libx264 @ 0x20e0c00] i16 v,h,dc,p: 47% 34% 14%  5%
+[libx264 @ 0x20e0c00] i8 v,h,dc,ddl,ddr,vr,hd,vl,hu: 42% 13% 29%  3%  2%  3%  4%  2%  3%
+[libx264 @ 0x20e0c00] i4 v,h,dc,ddl,ddr,vr,hd,vl,hu: 32% 27% 16%  4%  4%  4%  5%  3%  4%
+[libx264 @ 0x20e0c00] i8c dc,h,v,p: 71% 13% 16%  1%
+[libx264 @ 0x20e0c00] Weighted P-Frames: Y:14.8% UV:13.9%
+[libx264 @ 0x20e0c00] ref P L0: 60.8% 10.1% 19.1%  9.6%  0.5%
+[libx264 @ 0x20e0c00] ref B L0: 94.2%  5.8%
+[libx264 @ 0x20e0c00] kb/s:375.02
+Exiting normally, received signal 2.

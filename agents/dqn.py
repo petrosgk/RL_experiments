@@ -4,21 +4,10 @@ from agents.base import BaseAgent
 from rl.callbacks import ModelIntervalCheckpoint
 from rl.memory import SequentialMemory
 from rl.agents.dqn import DQNAgent
-from models.dqn_model import DQN_32
 
 
 class DQN(BaseAgent):
-  def __init__(self, processor, policy, test_policy, num_actions):
-    super(DQN, self).__init__(processor=processor,
-                              policy=policy,
-                              num_actions=num_actions)
-
-    # DQN model
-    model = DQN_32(window_length=opt.dqn_window_length,
-                   grayscale=opt.grayscale,
-                   width=opt.width,
-                   height=opt.height,
-                   num_actions=self.num_actions)
+  def __init__(self, model, processor, policy, test_policy, num_actions):
     # Replay memory
     memory = SequentialMemory(limit=opt.dqn_replay_memory_size,
                               window_length=opt.dqn_window_length)
@@ -38,21 +27,23 @@ class DQN(BaseAgent):
                           delta_clip=opt.dqn_delta_clip)
     self.agent.compile(optimizer=keras.optimizers.Adam(lr=opt.dqn_learning_rate), metrics=['mae'])
 
-  def fit(self, env, num_steps, weights_path, visualize):
-    callbacks = [ModelIntervalCheckpoint(weights_path, interval=50000, verbose=1)]
+  def fit(self, env, num_steps, weights_path=None, visualize=False):
+    callbacks = []
+    if weights_path is not None:
+      callbacks += [ModelIntervalCheckpoint(weights_path, interval=50000, verbose=1)]
     self.agent.fit(env=env,
                    nb_steps=num_steps,
                    action_repetition=opt.dqn_action_repetition,
                    callbacks=callbacks,
-                   log_interval=opt.dqn_target_model_update,
+                   log_interval=opt.log_interval,
                    test_interval=opt.test_interval,
-                   test_nb_episodes=5,
-                   test_action_repetition=opt.dqn_action_repetition,
+                   test_nb_episodes=opt.test_nb_episodes,
+                   test_action_repetition=opt.dqn_test_action_repetition,
                    visualize=visualize,
                    test_visualize=False,
                    verbose=2)
 
-  def test(self, env, num_episodes, visualize):
+  def test(self, env, num_episodes, visualize=False):
     self.agent.test(env=env,
                     nb_episodes=num_episodes,
                     action_repetition=opt.dqn_action_repetition,

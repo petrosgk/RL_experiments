@@ -30,22 +30,22 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                    </ServerInitialConditions>
                 <ServerHandlers>
                   <FileWorldGenerator src="/home/petrosgk/MalmoPlatform/Minecraft/run/saves/Rooms" />
-                  <ServerQuitFromTimeUp timeLimitMs="240000" description="out_of_time"/>
+                  <ServerQuitFromTimeUp timeLimitMs="300000" description="out_of_time"/>
                   <ServerQuitWhenAnyAgentFinishes />
                 </ServerHandlers>
               </ServerSection>
               <AgentSection mode="Survival">
                 <Name>''' + agent_names[0] + '''</Name>
                 <AgentStart>
-                  <Placement x="-23.5" y="4.0" z="86.5" yaw="0" pitch="20"/>
+                  <Placement x="1.5" y="4.0" z="90.5" yaw="0" pitch="15"/>
                 </AgentStart>
                 <AgentHandlers>
                   <VideoProducer>
-                    <Width>512</Width>
-                    <Height>512</Height>
+                    <Width>256</Width>
+                    <Height>256</Height>
                   </VideoProducer>
                   <ObservationFromFullStats/>
-                  <ContinuousMovementCommands turnSpeedDegs="45">
+                  <ContinuousMovementCommands turnSpeedDegs="10">
                     <ModifierList type="deny-list">
                       <command>attack</command>
                     </ModifierList>
@@ -54,13 +54,10 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                     <Reward description="found_goal" reward="1000" />
                     <Reward description="death" reward="-1000" />
                   </RewardForMissionEnd>
-                  <RewardForSendingCommand reward="-1"/>
-                  <RewardForTouchingBlockType>
-                    <Block type="gold_ore" reward="20"/>
-                  </RewardForTouchingBlockType>
+                  <RewardForSendingCommand reward="0"/>
+                  <RewardForTimeTaken initialReward="1000" delta="-1" density="MISSION_END"/>
                   <AgentQuitFromTouchingBlockType>
                     <Block type="gold_block" description="found_goal" />
-                    <Block type="lava water" description="death" />
                   </AgentQuitFromTouchingBlockType>
                 </AgentHandlers>
               </AgentSection>
@@ -75,14 +72,12 @@ class RoomsEnvironment(MissionEnvironment):
   def __init__(self, action_space, mission_name, mission_xml, remotes, state_builder, role=0,
                recording_path=None):
     if action_space == 'discrete':
-      actions = ['move 1', 'move 0', 'move -1', 'turn 1', 'turn 0', 'turn -1']
+      actions = ['move 1', 'move 0', 'move -1', 'turn 1.0', 'turn 0', 'turn -1.0']
     elif action_space == 'continuous':
       actions = ['move', 'turn']
     else:
       print('Unknown action space')
       sys.exit()
-
-    self._abs_max_reward = 1000  # For reward normalization needed by some RL algorithms
 
     super(RoomsEnvironment, self).__init__(mission_name, mission_xml, actions, remotes,
                                            state_builder,
@@ -147,12 +142,15 @@ class RoomsStateBuilder(MissionStateBuilder):
   def build(self, environment):
 
     img = environment.frame
+    obs = environment.world_observations
 
     if img is not None:
       img = img.resize((self._width, self._height))
 
       if self._gray:
         img = img.convert('L')
-      return np.array(img)
+      img = np.array(img)
     else:
-      return np.zeros((self._width, self._height, 1 if self._gray else 3)).squeeze()
+      img = np.zeros((self._width, self._height, 1 if self._gray else 3)).squeeze()
+
+    return img, obs

@@ -5,8 +5,10 @@ from PIL import Image
 
 
 class AtariProcessor(MyProcessor):
-  def __init__(self, plot_class=None):
-    super(AtariProcessor, self).__init__(plot_class=plot_class)
+  def __init__(self, autoencoder=None, autoencoder_mode='training', plot_class=None):
+    super(AtariProcessor, self).__init__(autoencoder=autoencoder,
+                                         autoencoder_mode=autoencoder_mode,
+                                         plot_class=plot_class)
 
   def process_observation(self, observation):
     img = Image.fromarray(observation)
@@ -14,12 +16,5 @@ class AtariProcessor(MyProcessor):
     if opt.grayscale:
       img = img.convert('L')
     observation = np.array(img)
+    observation = super(AtariProcessor, self).process_observation(observation)
     return observation
-
-  def process_step(self, observation, reward, done, info):
-    observation = self.process_observation(observation)
-    observation, reward, done, info = super(AtariProcessor, self).process_step(observation=observation,
-                                                                               reward=reward,
-                                                                               done=done,
-                                                                               info=info)
-    return observation, reward, done, info

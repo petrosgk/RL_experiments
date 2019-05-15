@@ -1,3 +1,4 @@
+import os
 from rl.policy import Policy
 import numpy as np
 import options as opt
@@ -5,77 +6,104 @@ from collections import deque
 
 
 class SeekNovelStatesPolicy(Policy):
-  def __init__(self, num_actions, autoencoder, eps=1.0, plot_class=None):
+  def __init__(self, num_actions, autoencoder, mode, eps=1.0, plot_class=None):
     super(SeekNovelStatesPolicy, self).__init__()
     self.num_actions = num_actions
     self.autoencoder = autoencoder
-    self.autoencoder_state_buffer = deque()
-    # self.autoencoder_loss_buffer = deque(maxlen=opt.losses_buffer_size)
-    # self.autoencoder_loss_buffer.append(1.0)
+    self.autoencoder_frame_buffer = deque(maxlen=opt.frame_buffer_size)
     self.state_visit_counts = np.zeros(shape=opt.state_vector_length)
+    self.actions_buffer = deque()
     self.eps = eps
-    self.last_discrete_state = 0
-    self.last_action = 0
-    self.steps = 0
+    self.episode_step = 0
+    self.step = 0
+
+    self.actions_to_replay = None
+    self.last_discrete_state = None
+    self.last_action = None
+
+    self.mode = mode
+    if mode == 'testing':
+      self.autoencoder.load_weights(os.path.join('weights', 'state_autoencoder.hdf5'))
 
     self.plot_class = plot_class
+
+    assert opt.frame_buffer_size % opt.train_sequence_length == 0, (opt.frame_buffer_size, opt.train_sequence_length)
+    self.num_sequences = int(opt.frame_buffer_size / opt.train_sequence_length)
 
   @staticmethod
   def preprocess_state(inputs):
     inputs = np.array(inputs, dtype=np.uint8)
     if opt.grayscale:
       inputs = np.expand_dims(inputs, axis=-1)
-    sequence = []
-    for frame in range(inputs.shape[0]):
-      sequence.append(inputs[frame])
-    sequence = np.concatenate(sequence, axis=-1)
-    return sequence
+    return inputs
 
   def train_autoencoder(self):
-    states = np.expand_dims(self.autoencoder_state_buffer, axis=0)
-    states = np.concatenate(states, axis=0)
-    states = (states / 255.0).astype(np.float32)
-    history = self.autoencoder.fit(x=states, y=states,
-                                   epochs=opt.epochs, batch_size=opt.batch_size, verbose=1)
-    loss = np.mean(history.history['loss'])
-    self.trained_once = True
+    frames = np.asarray(self.autoencoder_frame_buffer)
+    states = np.split(frames, self.num_sequences)
+    states = np.asarray(states)
+    train_history = self.autoencoder.fit(states, states, batch_size=opt.batch_size, epochs=opt.epochs)
+    self.autoencoder.save_weights(os.path.join('weights', 'state_autoencoder.hdf5'))
     if self.plot_class:
-      self.plot_class.plot_autoencoder_train_loss_buffer.append(loss)
+      losses = train_history.history['loss']
+      for loss in losses:
+        self.plot_class.plot_autoencoder_train_loss_buffer.append(loss)
 
-  def get_autoencoder_outputs(self, inputs):
-    inputs = np.expand_dims(inputs, axis=0)
-    inputs = (inputs / 255.0).astype(np.float32)
-    decoded_sequence, quantized_sequence, temperature = self.autoencoder.predict_on_batch(inputs)
-    autoencoder_test_loss = np.mean(np.square(inputs - decoded_sequence))
-    # print('\n', np.argmax(quantized_sequence))
-    decoded_sequence = np.squeeze(decoded_sequence, axis=0)
-    quantized_sequence = np.squeeze(quantized_sequence, axis=0)
-    return decoded_sequence, quantized_sequence, temperature, autoencoder_test_loss
+  def get_autoencoder_outputs(self, state):
+    state = np.expand_dims(state, axis=0)  # Introduce batch dimension
+    decoded_sequence, quantized_sequence, temperature = self.autoencoder.predict_on_batch(state)
+    decoded_sequence = np.squeeze(decoded_sequence, axis=0)  # Remove batch dimension
+    quantized_sequence = np.squeeze(quantized_sequence, axis=0)  # Remove batch dimension
+    return decoded_sequence, quantized_sequence, temperature
+
+  @staticmethod
+  def L2_loss(decoded_sequence, state):
+    state = (state / 255.0).astype(np.float32)
+    loss = np.mean(np.square(decoded_sequence - state))
+    return loss
 
   def seek_novel_states(self, state):
-    # Get reconstruction error on current state
-    decoded_sequence, quantized_encoding, temperature, autoencoder_test_loss = self.get_autoencoder_outputs(state)
-    max_ind = np.argmax(quantized_encoding)
+    decoded_state, quantized_state, temperature = self.get_autoencoder_outputs(state)
+    loss = self.L2_loss(decoded_state, state)
+    if self.plot_class:
+      self.plot_class.plot_autoencoder_test_loss_buffer.append(loss)
+
+    state = state[-1]
+    decoded_state = decoded_state[-1]
+    quantized_state = quantized_state[-1]
+
+    max_ind = np.argmax(quantized_state)
     self.state_visit_counts[max_ind] += 1
 
-    if max_ind == self.last_discrete_state:
-      action = np.random.randint(self.num_actions)  # Choose a new action
-    else:
-      action = self.last_action  # Keep doing last action
-    self.last_discrete_state = max_ind
-
-    # if autoencoder_test_loss < np.mean(self.autoencoder_loss_buffer):
+    # if max_ind == self.last_discrete_state:
     #   action = np.random.randint(self.num_actions)  # Choose a new action
     # else:
     #   action = self.last_action  # Keep doing last action
-    # # Append to memory
-    # self.autoencoder_loss_buffer.append(autoencoder_test_loss)
+    # self.last_discrete_state = max_ind
+
+    action = np.random.randint(self.num_actions)  # Choose a new action
+
+    # Normalize loss
+    # autoencoder_test_loss = self.normalization.normalize_mean(autoencoder_test_loss)
+
+    # if autoencoder_test_loss > np.mean(self.autoencoder_loss_buffer):
+    #   print('\nStep %d. Novel state encountered! Replaying next episode!' % self.episode_step)
+    #   # On next episode, we will replay this action sequence
+    #   self.actions_to_replay = list(self.actions_buffer)
+    #   action = np.random.randint(self.num_actions)
+    # else:
+    #   if self.actions_to_replay is not None and self.episode_step < len(self.actions_to_replay):
+    #     action = self.actions_to_replay[self.episode_step]
+    #   else:
+    #     action = np.random.randint(self.num_actions)
 
     if self.plot_class:
       self.plot_class.plot_autoencoder_temperature_buffer.append(temperature)
-      self.plot_class.plot_autoencoder_test_loss_buffer.append(autoencoder_test_loss)
-      self.plot_class.state = decoded_sequence
-      self.plot_class.state_visit_counts = self.state_visit_counts
+      decoded_state = (decoded_state * 255.0).astype('uint8')
+      self.plot_class.state_buffer.append(state)
+      self.plot_class.reconstructed_state_buffer.append(decoded_state)
+      self.plot_class.state_index_buffer.append(max_ind)
+      self.plot_class.state_visit_counts[max_ind] += 1
+      self.plot_class.update_state_graph(max_ind)
 
     return action
 
@@ -90,19 +118,25 @@ class SeekNovelStatesPolicy(Policy):
 
   def select_action(self, q_values, state, terminal):
     state = self.preprocess_state(state)
-    self.autoencoder_state_buffer.append(state)
-    if terminal:
-      self.train_autoencoder()
-      self.autoencoder_state_buffer.clear()
+    for frame in state:
+      self.autoencoder_frame_buffer.append(frame)
+    if 0 < self.step <= opt.steps_warmup:
+      if (self.step * opt.dqn_window_length) % opt.frame_buffer_size == 0:
+        self.train_autoencoder()
     if np.random.uniform() < self.eps:
-      if self.steps > opt.steps_warmup:
+      if self.step > opt.steps_warmup:
         action = self.seek_novel_states(state)
       else:
         action = np.random.randint(self.num_actions)
     else:
       action = np.argmax(q_values)
     self.last_action = action
-    self.steps += 1
+    self.actions_buffer.append(action)  # Save action to buffer
+    self.episode_step += 1
+    self.step += 1
+    if terminal:
+      self.actions_buffer.clear()
+      self.episode_step = 0
     return action
 
   def get_config(self):

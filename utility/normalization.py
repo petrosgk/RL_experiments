@@ -1,14 +1,12 @@
 import numpy as np
 
 
-class FeatureNormalization(object):
-  def __init__(self, width, height, sequence_length, channels):
-    self.width = width
-    self.height = height
-    self.sum = np.zeros(shape=(width, height, sequence_length * channels))
-    self.squared_sum = np.zeros(shape=(width, height, sequence_length * channels))
-    self.mean = None
-    self.std = None
+class Normalization(object):
+  def __init__(self):
+    self.sum = 0
+    self.squared_sum = 0
+    self.mean = 1.0
+    self.std = 1.0
     self.count = 0
 
   def update_statistics(self, data):
@@ -22,7 +20,14 @@ class FeatureNormalization(object):
     mean_of_squares = self.squared_sum / self.count
     self.std = np.sqrt(mean_of_squares - np.square(self.mean) + 1e-8)
 
-  def normalize(self, data):
+  def normalize_mean(self, data):
+    # Normalize by dividing with the running mean BEFORE updating mean with current data
+    normalized_data = data / self.mean
+    # Update running statistics
+    self.update_statistics(data)
+    return normalized_data.astype(np.float32)
+
+  def normalize_zmuv(self, data):
     # Update running statistics
     self.update_statistics(data)
     # Normalize to zero mean and unit variance
