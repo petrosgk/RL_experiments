@@ -3,7 +3,7 @@ import numpy as np
 # General options
 plot = True
 plot_replay = False
-recurrent = True  # Use recurrent NN
+recurrent = False  # Use recurrent NN
 
 # State properties
 width, height, grayscale = 84, 84, False
