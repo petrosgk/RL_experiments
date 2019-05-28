@@ -55,7 +55,6 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                     <Reward description="death" reward="-1000" />
                   </RewardForMissionEnd>
                   <RewardForSendingCommand reward="0"/>
-                  <RewardForTimeTaken initialReward="1000" delta="-1" density="MISSION_END"/>
                   <AgentQuitFromTouchingBlockType>
                     <Block type="gold_block" description="found_goal" />
                   </AgentQuitFromTouchingBlockType>

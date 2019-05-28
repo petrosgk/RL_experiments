@@ -1,6 +1,7 @@
 from rl.core import Processor
 import numpy as np
 import options as opt
+from PIL import Image
 
 
 class BaseAgent(object):
@@ -33,12 +34,15 @@ class MyProcessor(Processor):
   def process_observation(self, observation):
     observation = observation.astype(np.uint8)
     if self.autoencoder is not None:
+      autoenc_inputs = Image.fromarray(observation)
+      autoenc_inputs = autoenc_inputs.resize((36, 36))
+      autoenc_inputs = np.array(autoenc_inputs)
       if self.autoencoder_mode == 'training':
-        self.autoencoder.frame_buffer.append(observation)
+        self.autoencoder.frame_buffer.append(autoenc_inputs)
         if (self.step > 0) and (self.step % opt.frame_buffer_size == 0):
           self.autoencoder.train()
       else:
-        self.autoencoder.frame_buffer.append(observation)
+        self.autoencoder.frame_buffer.append(autoenc_inputs)
         self.quantized_observation = self.autoencoder.get_outputs()
         if self.quantized_observation is not None:
           self.state_visit_counts[np.argmax(self.quantized_observation)] += 1
