@@ -1,35 +1,30 @@
 import keras
 
 
-def conv_relu(x, filters, kernel_size, strides, recurrent=False):
+def conv_bn_relu(x, filters, kernel_size, strides, recurrent=False, batchnorm=False):
   if recurrent:
-   x = keras.layers.TimeDistributed(keras.layers.Conv2D(filters=filters,
-                                                        kernel_size=kernel_size,
-                                                        strides=strides,
-                                                        activation='relu'))(x)
+   x = keras.layers.TimeDistributed(keras.layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides))(x)
+   if batchnorm:
+    x = keras.layers.TimeDistributed(keras.layers.BatchNormalization())(x)
+   x = keras.layers.TimeDistributed(keras.layers.Activation('relu'))(x)
   else:
-    x = keras.layers.Conv2D(filters=filters,
-                            kernel_size=kernel_size,
-                            strides=strides,
-                            activation='relu')(x)
+    x = keras.layers.Conv2D(filters=filters, kernel_size=kernel_size, strides=strides)(x)
+    if batchnorm:
+      x = keras.layers.BatchNormalization()(x)
+    x = keras.layers.Activation('relu')(x)
   return x
 
 
-def DQN_Model(window_length, grayscale, width, height, num_actions):
-  assert width == 84 and height == 84, 'Model accepts 84x84 input size, got {}x{}'.format(width, height)
-  if grayscale:
-    channels = 1
-  else:
-    channels = 3
-  input_shape = (84, 84, window_length * channels)
+def DQN_Model(window_length, num_actions):
+  input_shape = (84, 84, window_length)
 
   inputs = keras.layers.Input(shape=input_shape)
   # shape: [batch_size, 84, 84, window_length * channels]
-  x = conv_relu(inputs, filters=32, kernel_size=8, strides=4)
+  x = conv_bn_relu(inputs, filters=32, kernel_size=8, strides=4)
   # shape: [batch_size, 20, 20, 32]
-  x = conv_relu(x, filters=64, kernel_size=4, strides=2)
+  x = conv_bn_relu(x, filters=64, kernel_size=4, strides=2)
   # shape: [batch_size, 9, 9, 64]
-  x = conv_relu(x, filters=64, kernel_size=3, strides=1)
+  x = conv_bn_relu(x, filters=64, kernel_size=3, strides=1)
   # shape: [batch_size, 7, 7, 64]
   x = keras.layers.Flatten()(x)
   # shape: [batch_size, 3136]
@@ -58,22 +53,16 @@ def DQN_Dense_Model(window_length, state_size, num_actions):
   return model
 
 
-def DRQN_Model(window_length, grayscale, width, height, num_actions):
-  assert width == 84 and height == 84, \
-    'Model accepts 84x84 input size, got {}x{}'.format(width, height)
-  if grayscale:
-    channels = 1
-  else:
-    channels = 3
-  input_shape = (window_length, 84, 84, channels)
+def DRQN_Model(window_length, num_actions):
+  input_shape = (window_length, 84, 84, 1)
 
   inputs = keras.layers.Input(shape=input_shape)
   # shape: [batch_size, window_length, 84, 84, channels]
-  x = conv_relu(inputs, filters=32, kernel_size=8, strides=4, recurrent=True)
+  x = conv_bn_relu(inputs, filters=32, kernel_size=8, strides=4, recurrent=True)
   # shape: [batch_size, window_length, 20, 20, 32]
-  x = conv_relu(x, filters=64, kernel_size=4, strides=2, recurrent=True)
+  x = conv_bn_relu(x, filters=64, kernel_size=4, strides=2, recurrent=True)
   # shape: [batch_size, window_length, 9, 9, 64]
-  x = conv_relu(x, filters=64, kernel_size=3, strides=1, recurrent=True)
+  x = conv_bn_relu(x, filters=64, kernel_size=3, strides=1, recurrent=True)
   # shape: [batch_size, window_length, 7, 7, 64]
   x = keras.layers.TimeDistributed(keras.layers.Flatten())(x)
   # shape: [batch_size, window_length, 3136]
@@ -102,13 +91,8 @@ def DRQN_Dense_Model(window_length, state_size, num_actions):
   return model
 
 
-def DDPG_Model(window_length, grayscale, width, height, num_actions):
-  assert width == 36 and height == 36, 'Model accepts 84x84 input size'
-  if grayscale:
-    channels = 1
-  else:
-    channels = 3
-  observation_shape = (36, 36, window_length * channels)
+def DDPG_Model(window_length, num_actions):
+  observation_shape = (36, 36, window_length)
 
   # Build actor and critic networks
   inputs = keras.layers.Input(shape=observation_shape)

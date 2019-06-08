@@ -16,18 +16,18 @@ class VQ(L.Layer):
     return input_shape
 
 
-def conv_bn_tanh(inputs, filters, kernel_size, strides, padding, name, transpose):
+def conv_bn_relu(inputs, filters, kernel_size, strides, padding, name, transpose):
   if transpose:
     conv = L.Conv2DTranspose(filters=filters, kernel_size=kernel_size, padding=padding, strides=strides, name=name)(inputs)
   else:
     conv = L.Conv2D(filters=filters, kernel_size=kernel_size, padding=padding, strides=strides, name=name)(inputs)
   bn = L.BatchNormalization(name=name + '_bn')(conv)
-  ac = L.Activation('tanh', name=name + '_ac')(bn)
+  ac = L.Activation('relu', name=name + '_ac')(bn)
   return ac
 
 
 def conv_block(inputs, filters, kernel_size, strides, name, transpose=False):
-    strided_conv = conv_bn_tanh(inputs=inputs, filters=filters, kernel_size=kernel_size,
+    strided_conv = conv_bn_relu(inputs=inputs, filters=filters, kernel_size=kernel_size,
                                 padding='valid', strides=strides, name=name + '_strided_conv',
                                 transpose=transpose)
     return strided_conv
@@ -84,6 +84,21 @@ def L2_loss(y_true, y_pred):
   return tf.reduce_mean(tf.square(y_true - y_pred))
 
 
+def log10(x):
+  numerator = tf.log(x)
+  denominator = tf.log(tf.constant(10, dtype=numerator.dtype))
+  return numerator / denominator
+
+
+def SNR(y_true, y_pred):
+  y_true = normalize(y_true)
+  mean_signal = tf.math.reduce_mean(y_true)
+  noise = tf.abs(y_true - y_pred)
+  noise_std = tf.math.reduce_std(noise)
+  snr = 20 * log10(mean_signal / noise_std)
+  return snr
+
+
 def model(channels, state_vector_length):
   state_input = L.Input(shape=(36, 36, channels), dtype='uint8', name='state_input')
   model_input = L.Lambda(normalize, name='model_input')(state_input)
@@ -93,6 +108,7 @@ def model(channels, state_vector_length):
   decoded_state = decoder(inputs=quantized_state, channels=channels)
 
   model = keras.models.Model(inputs=state_input, outputs=[decoded_state, quantized_state])
-  model.compile(optimizer=keras.optimizers.Adam(lr=opt.learning_rate), loss={'dec_head': L2_loss})
+  model.compile(optimizer=keras.optimizers.Adam(lr=opt.learning_rate),
+                loss={'dec_head': L2_loss}, metrics={'dec_head': SNR})
   print(model.summary())
   return model

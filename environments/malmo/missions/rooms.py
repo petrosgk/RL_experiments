@@ -30,14 +30,14 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                    </ServerInitialConditions>
                 <ServerHandlers>
                   <FileWorldGenerator src="/home/petrosgk/MalmoPlatform/Minecraft/run/saves/Rooms" />
-                  <ServerQuitFromTimeUp timeLimitMs="300000" description="out_of_time"/>
+                  <ServerQuitFromTimeUp timeLimitMs="1000000" description="out_of_time"/>
                   <ServerQuitWhenAnyAgentFinishes />
                 </ServerHandlers>
               </ServerSection>
               <AgentSection mode="Survival">
                 <Name>''' + agent_names[0] + '''</Name>
                 <AgentStart>
-                  <Placement x="1.5" y="4.0" z="90.5" yaw="0" pitch="15"/>
+                  <Placement x="20.5" y="4.0" z="85.5" yaw="0" pitch="15"/>
                 </AgentStart>
                 <AgentHandlers>
                   <VideoProducer>
@@ -45,16 +45,16 @@ xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance">
                     <Height>256</Height>
                   </VideoProducer>
                   <ObservationFromFullStats/>
-                  <ContinuousMovementCommands turnSpeedDegs="10">
+                  <ContinuousMovementCommands turnSpeedDegs="45">
                     <ModifierList type="deny-list">
                       <command>attack</command>
                     </ModifierList>
                   </ContinuousMovementCommands>
                   <RewardForMissionEnd>
-                    <Reward description="found_goal" reward="1000" />
-                    <Reward description="death" reward="-1000" />
+                    <Reward description="found_goal" reward="1" />
+                    <Reward description="death" reward="-1" />
                   </RewardForMissionEnd>
-                  <RewardForSendingCommand reward="0"/>
+                  <RewardForSendingCommand reward="-1"/>
                   <AgentQuitFromTouchingBlockType>
                     <Block type="gold_block" description="found_goal" />
                   </AgentQuitFromTouchingBlockType>

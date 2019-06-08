@@ -40,7 +40,7 @@ class DDPG(BaseAgent):
                    test_nb_episodes=opt.test_nb_episodes,
                    test_action_repetition=opt.ddpg_action_repetition,
                    visualize=visualize,
-                   test_visualize=False,
+                   test_visualize=visualize,
                    verbose=2)
 
   def test(self, env, num_episodes, visualize=False):

@@ -29,6 +29,8 @@ class RandomAgent(BaseAgent):
     self.agent.fit(env=env,
                    nb_steps=num_steps,
                    visualize=visualize,
+                   action_repetition=opt.random_action_repetition,
+                   test_action_repetition=opt.random_action_repetition,
                    test_nb_episodes=opt.test_nb_episodes,
                    test_interval=opt.test_interval,
                    test_visualize=False,

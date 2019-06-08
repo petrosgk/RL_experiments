@@ -38,10 +38,10 @@ class DQN(BaseAgent):
                    log_interval=opt.log_interval,
                    test_interval=opt.test_interval,
                    test_nb_episodes=opt.test_nb_episodes,
-                   test_action_repetition=opt.dqn_test_action_repetition,
+                   test_action_repetition=opt.dqn_action_repetition,
                    visualize=visualize,
-                   test_visualize=False,
-                   verbose=2)
+                   test_visualize=visualize,
+                   verbose=1)
 
   def test(self, env, num_episodes, visualize=False):
     self.agent.test(env=env,

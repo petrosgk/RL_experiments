@@ -1,10 +1,10 @@
 import os
 from argparse import ArgumentParser
 import options as opt
-from agents.random import RandomAgent
 from models.deep_rl import DRQN_Model, DQN_Model
 from agents.dqn import DQN
 from agents.tabular_q import TabularQAgent
+from agents.random import RandomAgent
 from environments.atari.processor import AtariProcessor
 from rl.policy import LinearAnnealedPolicy, EpsGreedyQPolicy
 from models.autoencoder import Autoencoder
@@ -27,16 +27,12 @@ def parse_clients_args(args_clients):
 arg_parser = ArgumentParser('Atari experiment')
 arg_parser.add_argument('--steps', type=int, default=1000000,
                         help='Number of steps to train for')
-arg_parser.add_argument('--agent_mode', choices=['training', 'testing'], default='training',
-                        help='Agent training or testing mode')
-arg_parser.add_argument('--autoencoder_mode', choices=['none', 'training', 'testing'], default='none',
-                        help='Do not use autoencoder or use autoencoder in training or testing mode')
+arg_parser.add_argument('--agent_type', choices=['DDQN', 'Random'], default='DDQN',
+                        help='Set agent type (Double-DQN or Random agent).')
+arg_parser.add_argument('--use_vqae', action='store_true', default=False, help='Use VQ-AE.')
 arg_parser.add_argument('--env_name', type=str, default='MontezumaRevenge-v0')
+arg_parser.add_argument('--visualize', action='store_true', default=False, help='Visualize')
 args = arg_parser.parse_args()
-
-steps = args.steps
-agent_mode = args.agent_mode
-autoencoder_mode = args.autoencoder_mode if agent_mode == 'training' else 'testing'
 
 env = gym.make(args.env_name)
 
@@ -50,24 +46,20 @@ warnings.simplefilter('ignore')
 
 # Setup plotting
 if opt.plot:
-  plot_class = plot.Plot(autoencoder_mode=autoencoder_mode)
+  plot_class = plot.Plot(autoencoder=args.use_vqae)
 else:
   plot_class = None
 
 vqae = None
-if autoencoder_mode != 'none':
+if args.use_vqae:
   # Initialize VQAE
-  vqae = Autoencoder(mode=autoencoder_mode, plot_class=plot_class)
+  vqae = Autoencoder(plot_class=plot_class)
 
 # Initialize processor
 processor = AtariProcessor(autoencoder=vqae,
-                           autoencoder_mode=autoencoder_mode,
                            plot_class=plot_class)
 
-if autoencoder_mode == 'training':
-  # Use Random agent to train the VQAE
-  agent = RandomAgent(num_actions=env.action_space.n, processor=processor)
-else:
+if args.agent_type == 'DDQN':
   # Setup exploration policy
   policy = LinearAnnealedPolicy(EpsGreedyQPolicy(),
                                 attr='eps', value_max=opt.eps_value_max,
@@ -83,19 +75,15 @@ else:
     # Setup DQN agent
     if opt.recurrent:
       model = DRQN_Model(window_length=opt.dqn_window_length,
-                         grayscale=opt.grayscale,
-                         width=opt.width,
-                         height=opt.height,
                          num_actions=env.action_space.n)
     else:
       model = DQN_Model(window_length=opt.dqn_window_length,
-                        grayscale=opt.grayscale,
-                        width=opt.width,
-                        height=opt.height,
                         num_actions=env.action_space.n)
     # Setup DQN agent
     agent = DQN(model=model, num_actions=env.action_space.n,
                 policy=policy, test_policy=policy, processor=processor)
+else:
+  agent = RandomAgent(num_actions=env.action_space.n, processor=processor)
 
 print(args.env_name + ' initialized.')
 
@@ -105,10 +93,6 @@ if not os.path.exists(path):
   os.makedirs(path)
 weights_path = os.path.join(path, 'weights.hdf5')
 
-# Start training or testing agent
-if agent_mode == 'training':
-    agent.fit(env=env, num_steps=steps, weights_path=weights_path, visualize=False)
-    agent.save(weights_path)
-else:
-    agent.load(weights_path)
-    agent.test(env=env, num_episodes=10, visualize=True)
+# Run the agent
+agent.fit(env=env, num_steps=args.steps, weights_path=weights_path, visualize=args.visualize)
+agent.save(weights_path)
